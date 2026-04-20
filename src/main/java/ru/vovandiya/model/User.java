@@ -19,12 +19,11 @@ import java.util.Optional;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Table(
+@AllArgsConstructor
+@Builder@Table(
     name = "users",
     indexes = @Index(name = "idx_users_username", columnList = "username")
 )
-@Builder
-@AllArgsConstructor
 public class User extends PanacheEntity {
 
     @Column(unique = true, nullable = false)

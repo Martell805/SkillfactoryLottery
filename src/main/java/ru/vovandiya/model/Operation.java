@@ -7,6 +7,8 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -19,6 +21,8 @@ import java.time.LocalDateTime;
 @Entity
 @ToString
 @RequiredArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(
     name = "оperation",
     indexes = @Index(name = "idx_оperation_user_id", columnList = "user_id")

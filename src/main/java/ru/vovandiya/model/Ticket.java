@@ -7,6 +7,8 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -17,6 +19,8 @@ import lombok.ToString;
 @Entity
 @ToString
 @RequiredArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(
     name = "ticket",
     indexes = {
@@ -37,4 +41,6 @@ public class Ticket extends PanacheEntity {
 
     @Column(name = "picked_numbers")
     private String pickedNumbers;
+
+    private Integer prize;
 }
