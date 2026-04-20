@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: sflottery
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build and test
+        env:
+          QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://localhost:5432/sflottery
+          QUARKUS_DATASOURCE_USERNAME: user
+          QUARKUS_DATASOURCE_PASSWORD: password
+          QUARKUS_DEVSERVICES_ENABLED: false
+        run: ./gradlew build
+
+      - name: Build Docker image
+        run: docker build -f Dockerfile.jvm -t sflottery:${{ github.sha }} .
