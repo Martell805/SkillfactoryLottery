@@ -21,22 +21,23 @@ public class TicketService {
     }
 
     public Ticket findById(Long id) {
+        requirePositiveId(id, "id");
         return (Ticket) Ticket.findByIdOptional(id)
                 .orElseThrow(() -> new WebApplicationException("Ticket not found", 404));
     }
 
     @Transactional
     public Ticket create(TicketRequest request) {
+        validateRequest(request);
         Operation operation = null;
         if (request.operationId() != null) {
-            operation = (Operation) Operation.findByIdOptional(request.operationId())
-                    .orElseThrow(() -> new WebApplicationException("Operation not found", 404));
+            operation = findOperationById(request.operationId());
         }
         Ticket ticket = Ticket.builder()
-                .draw(drawService.findById(request.drawId()))
+                .draw(drawService.findById(requirePositiveId(request.drawId(), "drawId")))
                 .operation(operation)
-                .pickedNumbers(request.pickedNumbers())
-                .prize(request.prize())
+                .pickedNumbers(requireText(request.pickedNumbers(), "pickedNumbers"))
+                .prize(requireNonNegative(request.prize(), "prize"))
                 .build();
         ticket.persist();
         return ticket;
@@ -44,16 +45,16 @@ public class TicketService {
 
     @Transactional
     public Ticket update(Long id, TicketRequest request) {
+        validateRequest(request);
         Ticket ticket = findById(id);
-        ticket.setDraw(drawService.findById(request.drawId()));
+        ticket.setDraw(drawService.findById(requirePositiveId(request.drawId(), "drawId")));
         if (request.operationId() != null) {
-            ticket.setOperation((Operation) Operation.findByIdOptional(request.operationId())
-                    .orElseThrow(() -> new WebApplicationException("Operation not found", 404)));
+            ticket.setOperation(findOperationById(request.operationId()));
         } else {
             ticket.setOperation(null);
         }
-        ticket.setPickedNumbers(request.pickedNumbers());
-        ticket.setPrize(request.prize());
+        ticket.setPickedNumbers(requireText(request.pickedNumbers(), "pickedNumbers"));
+        ticket.setPrize(requireNonNegative(request.prize(), "prize"));
         return ticket;
     }
 
@@ -61,5 +62,41 @@ public class TicketService {
     public void delete(Long id) {
         Ticket ticket = findById(id);
         ticket.delete();
+    }
+
+    private void validateRequest(TicketRequest request) {
+        if (request == null) {
+            throw new WebApplicationException("Request body is required", 400);
+        }
+    }
+
+    private Operation findOperationById(Long operationId) {
+        Long validatedId = requirePositiveId(operationId, "operationId");
+        return (Operation) Operation.findByIdOptional(validatedId)
+                .orElseThrow(() -> new WebApplicationException("Operation not found", 404));
+    }
+
+    private Long requirePositiveId(Long id, String fieldName) {
+        if (id == null || id <= 0) {
+            throw new WebApplicationException(fieldName + " must be positive", 400);
+        }
+        return id;
+    }
+
+    private String requireText(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new WebApplicationException(fieldName + " is required", 400);
+        }
+        return value.trim();
+    }
+
+    private Integer requireNonNegative(Integer value, String fieldName) {
+        if (value == null) {
+            throw new WebApplicationException(fieldName + " is required", 400);
+        }
+        if (value < 0) {
+            throw new WebApplicationException(fieldName + " must not be negative", 400);
+        }
+        return value;
     }
 }

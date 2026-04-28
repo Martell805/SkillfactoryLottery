@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import ru.vovandiya.dto.DrawResultRequest;
+import ru.vovandiya.dto.DrawStatus;
 import ru.vovandiya.model.DrawResult;
 
 import java.util.List;
@@ -20,16 +21,18 @@ public class DrawResultService {
     }
 
     public DrawResult findById(Long id) {
+        requirePositiveId(id, "id");
         return (DrawResult) DrawResult.findByIdOptional(id)
                 .orElseThrow(() -> new WebApplicationException("DrawResult not found", 404));
     }
 
     @Transactional
     public DrawResult create(DrawResultRequest request) {
+        validateRequest(request);
         DrawResult result = DrawResult.builder()
-                .draw(drawService.findById(request.drawId()))
-                .drawnNumbers(request.drawnNumbers())
-                .status(request.status())
+                .draw(drawService.findById(requirePositiveId(request.drawId(), "drawId")))
+                .drawnNumbers(requireText(request.drawnNumbers(), "drawnNumbers"))
+                .status(requireStatus(request.status()))
                 .build();
         result.persist();
         return result;
@@ -37,10 +40,11 @@ public class DrawResultService {
 
     @Transactional
     public DrawResult update(Long id, DrawResultRequest request) {
+        validateRequest(request);
         DrawResult result = findById(id);
-        result.setDraw(drawService.findById(request.drawId()));
-        result.setDrawnNumbers(request.drawnNumbers());
-        result.setStatus(request.status());
+        result.setDraw(drawService.findById(requirePositiveId(request.drawId(), "drawId")));
+        result.setDrawnNumbers(requireText(request.drawnNumbers(), "drawnNumbers"));
+        result.setStatus(requireStatus(request.status()));
         return result;
     }
 
@@ -48,5 +52,32 @@ public class DrawResultService {
     public void delete(Long id) {
         DrawResult result = findById(id);
         result.delete();
+    }
+
+    private void validateRequest(DrawResultRequest request) {
+        if (request == null) {
+            throw new WebApplicationException("Request body is required", 400);
+        }
+    }
+
+    private Long requirePositiveId(Long id, String fieldName) {
+        if (id == null || id <= 0) {
+            throw new WebApplicationException(fieldName + " must be positive", 400);
+        }
+        return id;
+    }
+
+    private String requireText(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new WebApplicationException(fieldName + " is required", 400);
+        }
+        return value.trim();
+    }
+
+    private DrawStatus requireStatus(DrawStatus status) {
+        if (status == null) {
+            throw new WebApplicationException("status is required", 400);
+        }
+        return status;
     }
 }

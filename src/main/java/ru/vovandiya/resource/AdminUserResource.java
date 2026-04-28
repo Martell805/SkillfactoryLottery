@@ -11,10 +11,14 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import ru.vovandiya.dto.UserRequest;
 import ru.vovandiya.service.AdminUserService;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 @Path("/admin/users")
 @RolesAllowed("admin")
@@ -27,33 +31,64 @@ public class AdminUserResource {
 
     @GET
     public Response listAll() {
-        return Response.ok(adminUserService.listAll()).build();
+        return execute(() -> Response.ok(adminUserService.listAll()).build());
     }
 
     @GET
     @Path("/{id}")
     public Response getById(@PathParam("id") Long id) {
-        return Response.ok(adminUserService.findById(id)).build();
+        return execute(() -> Response.ok(adminUserService.findById(id)).build());
     }
 
     @POST
     @Transactional
     public Response create(UserRequest request) {
-        return Response.status(201).entity(adminUserService.create(request)).build();
+        return execute(() -> Response.status(Response.Status.CREATED).entity(adminUserService.create(request)).build());
     }
 
     @PUT
     @Path("/{id}")
     @Transactional
     public Response update(@PathParam("id") Long id, UserRequest request) {
-        return Response.ok(adminUserService.update(id, request)).build();
+        return execute(() -> Response.ok(adminUserService.update(id, request)).build());
     }
 
     @DELETE
     @Path("/{id}")
     @Transactional
     public Response delete(@PathParam("id") Long id) {
-        adminUserService.delete(id);
-        return Response.noContent().build();
+        return execute(() -> {
+            adminUserService.delete(id);
+            return Response.noContent().build();
+        });
+    }
+
+    private Response execute(Supplier<Response> action) {
+        try {
+            return action.get();
+        } catch (WebApplicationException exception) {
+            return toErrorResponse(exception);
+        } catch (RuntimeException exception) {
+            return Response.serverError()
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(Map.of("error", "Unexpected server error"))
+                    .build();
+        }
+    }
+
+    private Response toErrorResponse(WebApplicationException exception) {
+        Response originalResponse = exception.getResponse();
+        int status = originalResponse != null ? originalResponse.getStatus() : Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
+        Object entity = originalResponse != null ? originalResponse.getEntity() : null;
+        String message = entity instanceof String stringEntity && !stringEntity.isBlank()
+                ? stringEntity
+                : exception.getMessage();
+        if (message == null || message.isBlank()) {
+            message = "Request failed";
+        }
+        return Response.status(status)
+                .type(MediaType.APPLICATION_JSON)
+                .entity(Map.of("error", message))
+                .build();
     }
 }
