@@ -31,7 +31,7 @@ public class DrawResultService {
         validateRequest(request);
         DrawResult result = DrawResult.builder()
                 .draw(drawService.findById(requirePositiveId(request.drawId(), "drawId")))
-                .drawnNumbers(requireText(request.drawnNumbers(), "drawnNumbers"))
+                .drawnNumbers(normalizeOptionalText(request.drawnNumbers()))
                 .status(requireStatus(request.status()))
                 .build();
         result.persist();
@@ -43,7 +43,7 @@ public class DrawResultService {
         validateRequest(request);
         DrawResult result = findById(id);
         result.setDraw(drawService.findById(requirePositiveId(request.drawId(), "drawId")));
-        result.setDrawnNumbers(requireText(request.drawnNumbers(), "drawnNumbers"));
+        result.setDrawnNumbers(normalizeOptionalText(request.drawnNumbers()));
         result.setStatus(requireStatus(request.status()));
         return result;
     }
@@ -67,11 +67,12 @@ public class DrawResultService {
         return id;
     }
 
-    private String requireText(String value, String fieldName) {
-        if (value == null || value.isBlank()) {
-            throw new WebApplicationException(fieldName + " is required", 400);
+    private String normalizeOptionalText(String value) {
+        if (value == null) {
+            return null;
         }
-        return value.trim();
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private DrawStatus requireStatus(DrawStatus status) {
