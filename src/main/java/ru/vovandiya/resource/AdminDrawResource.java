@@ -24,6 +24,16 @@ import java.util.function.Supplier;
 @RolesAllowed("admin")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Response;
+import ru.vovandiya.dto.lottery.CreateDrawRequest;
+import ru.vovandiya.service.lottery.DrawService;
+
+@Path("/admin/draws")
 public class AdminDrawResource {
 
     @Inject
@@ -90,5 +100,25 @@ public class AdminDrawResource {
                 .type(MediaType.APPLICATION_JSON)
                 .entity(Map.of("error", message))
                 .build();
+    }
+}
+
+    @POST
+    public Response createDraw(CreateDrawRequest request) {
+        return Response.ok(drawService.createDraw(request)).build();
+    }
+
+    @POST
+    @Path("/daily")
+    public Response createDailyDraw() {
+        return Response.status(Response.Status.NOT_IMPLEMENTED)
+                .entity("Daily draw is created by scheduler")
+                .build();
+    }
+
+    @GET
+    @Path("/{drawId}")
+    public Response getDraw(@PathParam("drawId") Long drawId) {
+        return Response.ok(drawService.getDraw(drawId)).build();
     }
 }

@@ -7,6 +7,18 @@ import ru.vovandiya.dto.DrawRequest;
 import ru.vovandiya.model.Draw;
 
 import java.util.List;
+package ru.vovandiya.service.lottery;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import ru.vovandiya.dto.DrawStatus;
+import ru.vovandiya.dto.lottery.CreateDrawRequest;
+import ru.vovandiya.dto.lottery.DrawResponse;
+import ru.vovandiya.model.Draw;
+import ru.vovandiya.model.DrawResult;
+
+import java.time.LocalDateTime;
 
 @ApplicationScoped
 public class DrawService {
@@ -107,5 +119,83 @@ public class DrawService {
         if (Boolean.TRUE.equals(isScheduled) && drawDate == null) {
             throw new WebApplicationException("drawDate is required for scheduled draws", 400);
         }
+    }
+}
+
+    @Inject
+    LotteryFormatService lotteryFormatService;
+
+    @Transactional
+    public DrawResponse createDraw(CreateDrawRequest request) {
+        validateCreateDrawRequest(request);
+
+        Draw draw = Draw.builder()
+                .format(request.format)
+                .isInstantaneous(Boolean.TRUE.equals(request.isInstantaneous))
+                .isScheduled(Boolean.TRUE.equals(request.isScheduled))
+                .drawDate(request.drawDate)
+                .prisePool(request.prisePool)
+                .build();
+
+        draw.persist();
+
+        DrawResult result = DrawResult.builder()
+                .draw(draw)
+                .drawnNumbers("")
+                .status(DrawStatus.NEW)
+                .build();
+
+        result.persist();
+
+        return toResponse(draw, result);
+    }
+
+    @Transactional
+    public DrawResponse createDailyDraw(String format, Integer prisePool, Boolean instantaneous) {
+        CreateDrawRequest request = new CreateDrawRequest();
+        request.format = format;
+        request.prisePool = prisePool;
+        request.isInstantaneous = instantaneous;
+        request.isScheduled = true;
+        request.drawDate = LocalDateTime.now();
+
+        return createDraw(request);
+    }
+
+    public DrawResponse getDraw(Long drawId) {
+        Draw draw = Draw.findById(drawId);
+
+        if (draw == null) {
+            throw new IllegalArgumentException("Draw not found: " + drawId);
+        }
+
+        DrawResult result = DrawResult.find("draw", draw).firstResult();
+
+        return toResponse(draw, result);
+    }
+
+    private void validateCreateDrawRequest(CreateDrawRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request is required");
+        }
+
+        lotteryFormatService.parse(request.format);
+
+        if (request.prisePool == null || request.prisePool < 0) {
+            throw new IllegalArgumentException("Prise pool must be zero or positive");
+        }
+    }
+
+    private DrawResponse toResponse(Draw draw, DrawResult result) {
+        return new DrawResponse(
+                draw.id,
+                draw.getFormat(),
+                draw.getIsInstantaneous(),
+                draw.getIsScheduled(),
+                draw.getDrawDate(),
+                draw.getPrisePool(),
+                result == null ? null : result.getStatus(),
+                result == null ? "" : result.getDrawnNumbers()
+        );
     }
 }
