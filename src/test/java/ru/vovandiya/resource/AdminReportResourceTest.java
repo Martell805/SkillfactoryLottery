@@ -94,7 +94,7 @@ class AdminReportResourceTest {
         given().queryParam("userId", alice).when().get("/admin/reports/operations/json")
                 .then().statusCode(200)
                 .body("$", hasSize(1))
-                .body("[0].user.username", org.hamcrest.Matchers.equalTo("alice"));
+                .body("[0].username", org.hamcrest.Matchers.equalTo("alice"));  // ← без .user
     }
 
     @Test
