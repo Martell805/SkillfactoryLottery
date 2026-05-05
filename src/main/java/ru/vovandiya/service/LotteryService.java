@@ -27,6 +27,10 @@ public class LotteryService {
 
     @Transactional
     public DrawNextResponse drawNextBarrel(Long drawId) {
+        if (Boolean.TRUE.equals(draw.getIsInstantaneous())) {
+            throw new IllegalStateException("Instantaneous draw cannot be processed barrel by barrel");
+        }
+
         Draw draw = findDraw(drawId);
         DrawResult result = findDrawResult(draw);
 
@@ -36,6 +40,7 @@ public class LotteryService {
 
         LotteryFormat format = formatService.parse(draw.getFormat());
         List<Integer> drawnNumbers = new ArrayList<>(numbersService.parseNumbers(result.getDrawnNumbers()));
+        validateDrawnNumbers(drawnNumbers, format);
 
         if (drawnNumbers.size() >= format.numbersToDraw()) {
             completeDraw(draw, result, drawnNumbers);
@@ -85,6 +90,7 @@ public class LotteryService {
 
         LotteryFormat format = formatService.parse(draw.getFormat());
         List<Integer> drawnNumbers = new ArrayList<>(numbersService.parseNumbers(result.getDrawnNumbers()));
+        validateDrawnNumbers(drawnNumbers, format);
         List<Integer> newNumbers = new ArrayList<>();
 
         if (result.getStatus() == DrawStatus.NEW) {
@@ -149,5 +155,24 @@ public class LotteryService {
         }
 
         return result;
+    }
+    private void validateDrawnNumbers(List<Integer> drawnNumbers, LotteryFormat format) {
+        if (drawnNumbers == null) {
+            return;
+        }
+
+        if (drawnNumbers.size() > format.numbersToDraw()) {
+            throw new IllegalStateException("Too many drawn numbers");
+        }
+
+        if (new HashSet<>(drawnNumbers).size() != drawnNumbers.size()) {
+            throw new IllegalStateException("Drawn numbers contain duplicates");
+        }
+
+        for (Integer number : drawnNumbers) {
+            if (number < format.minNumber() || number > format.maxNumber()) {
+                throw new IllegalStateException("Drawn number out of range: " + number);
+            }
+        }
     }
 }

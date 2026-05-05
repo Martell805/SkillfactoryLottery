@@ -88,12 +88,11 @@ public class PrizeCalculationService {
         return count;
     }
 
-    private int getPrizeWeight(int matches) {
+    private long getPrizeWeight(int matches) {
         if (matches < MIN_MATCHES_FOR_PRIZE) {
-            return 0;
+            return 0L;
         }
-
-        return matches * matches;
+        return (long) matches * matches;
         };
     }
 
