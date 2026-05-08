@@ -94,7 +94,6 @@ public class PrizeCalculationService {
         }
         return (long) matches * matches;
         };
-    }
 
     private record TicketPrizeInfo(
             Ticket ticket,
