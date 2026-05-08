@@ -2,10 +2,16 @@ package ru.vovandiya.dto.lottery;
 
 import java.time.LocalDateTime;
 
-public class CreateDrawRequest {
-    public String format;
-    public Boolean isInstantaneous;
-    public Boolean isScheduled;
-    public LocalDateTime drawDate;
-    public Integer prisePool;
+public record CreateDrawRequest(
+        String format,
+        Boolean isInstantaneous,
+        Boolean isScheduled,
+        LocalDateTime drawDate,
+        Integer prisePool,
+        /**
+         * Сколько билетов автоматически создать при создании тиража.
+         * Если null или 0 — билеты автоматически не создаются.
+         */
+        Integer ticketsCount
+) {
 }

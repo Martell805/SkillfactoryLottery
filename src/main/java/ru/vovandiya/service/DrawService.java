@@ -1,23 +1,18 @@
 package ru.vovandiya.service;
+package ru.vovandiya.service.lottery;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import ru.vovandiya.dto.DrawRequest;
 import ru.vovandiya.model.Draw;
-
 import java.util.List;
-package ru.vovandiya.service.lottery;
-
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import ru.vovandiya.dto.DrawStatus;
 import ru.vovandiya.dto.lottery.CreateDrawRequest;
 import ru.vovandiya.dto.lottery.DrawResponse;
-import ru.vovandiya.model.Draw;
 import ru.vovandiya.model.DrawResult;
-
+import ru.vovandiya.model.Ticket;
 import java.time.LocalDateTime;
 
 @ApplicationScoped
@@ -120,7 +115,6 @@ public class DrawService {
             throw new WebApplicationException("drawDate is required for scheduled draws", 400);
         }
     }
-}
 
     @Inject
     LotteryFormatService lotteryFormatService;
@@ -129,12 +123,14 @@ public class DrawService {
     public DrawResponse createDraw(CreateDrawRequest request) {
         validateCreateDrawRequest(request);
 
+        LotteryFormat format = lotteryFormatService.parse(request.format());
+
         Draw draw = Draw.builder()
-                .format(request.format)
-                .isInstantaneous(Boolean.TRUE.equals(request.isInstantaneous))
-                .isScheduled(Boolean.TRUE.equals(request.isScheduled))
-                .drawDate(request.drawDate)
-                .prisePool(request.prisePool)
+                .format(request.format())
+                .isInstantaneous(Boolean.TRUE.equals(request.isInstantaneous()))
+                .isScheduled(Boolean.TRUE.equals(request.isScheduled()))
+                .drawDate(request.drawDate())
+                .prisePool(request.prisePool())
                 .build();
 
         draw.persist();
@@ -147,17 +143,40 @@ public class DrawService {
 
         result.persist();
 
+        int ticketsCount = request.ticketsCount == null ? 0 : request.ticketsCount;
+        ticketGenerationService.generateTickets(draw, format, ticketsCount);
+
         return toResponse(draw, result);
     }
 
     @Transactional
     public DrawResponse createDailyDraw(String format, Integer prisePool, Boolean instantaneous) {
-        CreateDrawRequest request = new CreateDrawRequest();
-        request.format = format;
-        request.prisePool = prisePool;
-        request.isInstantaneous = instantaneous;
-        request.isScheduled = true;
-        request.drawDate = LocalDateTime.now();
+        CreateDrawRequest request = new CreateDrawRequest(
+                format,
+                instantaneous,
+                true,
+                LocalDateTime.now(),
+                prisePool,
+                0
+        );
+
+        return createDraw(request);
+    }
+    @Transactional
+    public DrawResponse createDailyDraw(
+            String format,
+            Integer prisePool,
+            Boolean instantaneous,
+            Integer ticketsCount
+    ) {
+        CreateDrawRequest request = new CreateDrawRequest(
+                format,
+                instantaneous,
+                true,
+                LocalDateTime.now(),
+                prisePool,
+                ticketsCount
+        );
 
         return createDraw(request);
     }
@@ -174,19 +193,32 @@ public class DrawService {
         return toResponse(draw, result);
     }
 
+    private static final int MAX_AUTO_GENERATED_TICKETS = 10_000;
+
     private void validateCreateDrawRequest(CreateDrawRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Request is required");
         }
 
-        lotteryFormatService.parse(request.format);
+        lotteryFormatService.parse(request.format());
 
-        if (request.prisePool == null || request.prisePool < 0) {
-            throw new IllegalArgumentException("Prise pool must be zero or positive");
+        if (request.prisePool() == null || request.prisePool() <= 0) {
+            throw new IllegalArgumentException("Prise pool must be positive");
+        }
+
+        if (request.ticketsCount() != null) {
+            if (request.ticketsCount() < 0) {
+                throw new IllegalArgumentException("Tickets count cannot be negative");
+            }
+
+            if (request.ticketsCount() > MAX_AUTO_GENERATED_TICKETS) {
+                throw new IllegalArgumentException("Tickets count is too large");
+            }
         }
     }
-
     private DrawResponse toResponse(Draw draw, DrawResult result) {
+        Long ticketsCount = Ticket.count("draw", draw);
+
         return new DrawResponse(
                 draw.id,
                 draw.getFormat(),
@@ -195,7 +227,8 @@ public class DrawService {
                 draw.getDrawDate(),
                 draw.getPrisePool(),
                 result == null ? null : result.getStatus(),
-                result == null ? "" : result.getDrawnNumbers()
+                result == null ? "" : result.getDrawnNumbers(),
+                ticketsCount
         );
     }
 }
