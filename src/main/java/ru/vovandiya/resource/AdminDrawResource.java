@@ -16,7 +16,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import ru.vovandiya.dto.DrawRequest;
 import ru.vovandiya.service.DrawService;
-
+import ru.vovandiya.dto.lottery.CreateDrawRequest;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -24,8 +24,7 @@ import java.util.function.Supplier;
 @RolesAllowed("admin")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-import ru.vovandiya.dto.lottery.CreateDrawRequest;
-import ru.vovandiya.service.lottery.DrawService;
+
 
 @Path("/admin/draws")
 public class AdminDrawResource {
