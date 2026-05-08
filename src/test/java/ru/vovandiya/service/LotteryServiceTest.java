@@ -1,4 +1,4 @@
-package ru.vovandiya.service.lottery;
+package ru.vovandiya.service;
 
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -6,8 +6,8 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.vovandiya.dto.DrawStatus;
-import ru.vovandiya.dto.lottery.DrawNextResponse;
-import ru.vovandiya.dto.lottery.DrawRemainingResponse;
+import ru.vovandiya.dto.DrawNextResponse;
+import ru.vovandiya.dto.DrawRemainingResponse;
 import ru.vovandiya.model.Draw;
 import ru.vovandiya.model.DrawResult;
 import ru.vovandiya.model.Ticket;
@@ -46,10 +46,10 @@ class LotteryServiceTest {
         DrawResult result = DrawResult.find("draw", draw).firstResult();
         List<Integer> drawnNumbers = lotteryNumbersService.parseNumbers(result.getDrawnNumbers());
 
-        assertEquals(DrawStatus.STARTED, response.status);
+        assertEquals(DrawStatus.STARTED, response.status());
         assertEquals(DrawStatus.STARTED, result.getStatus());
         assertEquals(1, drawnNumbers.size());
-        assertNotNull(response.drawnNumber);
+        assertNotNull(response.drawnNumber());
     }
 
     @Test
@@ -68,7 +68,7 @@ class LotteryServiceTest {
         DrawResult result = DrawResult.find("draw", draw).firstResult();
         List<Integer> drawnNumbers = lotteryNumbersService.parseNumbers(result.getDrawnNumbers());
 
-        assertEquals(DrawStatus.COMPLETE, secondResponse.status);
+        assertEquals(DrawStatus.COMPLETE, secondResponse.status());
         assertEquals(DrawStatus.COMPLETE, result.getStatus());
         assertEquals(2, drawnNumbers.size());
         assertEquals(2, new HashSet<>(drawnNumbers).size());
@@ -89,7 +89,7 @@ class LotteryServiceTest {
         DrawResult result = DrawResult.find("draw", draw).firstResult();
         List<Integer> drawnNumbers = lotteryNumbersService.parseNumbers(result.getDrawnNumbers());
 
-        assertEquals(DrawStatus.COMPLETE, response.status);
+        assertEquals(DrawStatus.COMPLETE, response.status());
         assertEquals(DrawStatus.COMPLETE, result.getStatus());
 
         assertEquals(3, drawnNumbers.size());
@@ -109,9 +109,9 @@ class LotteryServiceTest {
 
         DrawRemainingResponse response = lotteryService.drawRemainingBarrels(draw.id);
 
-        assertEquals(DrawStatus.COMPLETE, response.status);
-        assertTrue(response.newNumbers.isEmpty());
-        assertEquals(List.of(1, 2, 3), response.drawnNumbers);
+        assertEquals(DrawStatus.COMPLETE, response.status());
+        assertTrue(response.newNumbers().isEmpty());
+        assertEquals(List.of(1, 2, 3), response.drawnNumbers());
     }
 
     @Test

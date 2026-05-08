@@ -1,4 +1,4 @@
-package ru.vovandiya.service.lottery;
+package ru.vovandiya.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,12 +15,12 @@ public class TicketGenerationService {
     @Inject
     LotteryNumbersService numbersService;
 
-    public void generateTickets(Draw draw, LotteryFormat format, int ticketsCount) {
-        if (ticketsCount <= 0) {
+    public void generateTickets(Draw draw, LotteryFormat format, int ticketCount) {
+        if (ticketCount <= 0) {
             return;
         }
 
-        for (int i = 0; i < ticketsCount; i++) {
+        for (int i = 0; i < ticketCount; i++) {
             List<Integer> pickedNumbers = generatePickedNumbers(format);
 
             Ticket ticket = Ticket.builder()

@@ -1,4 +1,4 @@
-package ru.vovandiya.service.lottery;
+package ru.vovandiya.service;
 
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;

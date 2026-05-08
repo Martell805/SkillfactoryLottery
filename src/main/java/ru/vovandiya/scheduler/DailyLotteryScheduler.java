@@ -7,7 +7,7 @@ import jakarta.transaction.Transactional;
 import ru.vovandiya.dto.DrawStatus;
 import ru.vovandiya.model.Draw;
 import ru.vovandiya.model.DrawResult;
-import ru.vovandiya.service.lottery.LotteryService;
+import ru.vovandiya.service.LotteryService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

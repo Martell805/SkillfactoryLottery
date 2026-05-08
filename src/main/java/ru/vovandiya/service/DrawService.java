@@ -8,14 +8,17 @@ import ru.vovandiya.model.Draw;
 import java.util.List;
 import jakarta.inject.Inject;
 import ru.vovandiya.dto.DrawStatus;
-import ru.vovandiya.dto.lottery.CreateDrawRequest;
-import ru.vovandiya.dto.lottery.DrawResponse;
+import ru.vovandiya.dto.CreateDrawRequest;
+import ru.vovandiya.dto.DrawResponse;
 import ru.vovandiya.model.DrawResult;
 import ru.vovandiya.model.Ticket;
 import java.time.LocalDateTime;
 
 @ApplicationScoped
 public class DrawService {
+
+    @Inject
+    TicketGenerationService ticketGenerationService;
 
     public List<Draw> listAll() {
         return Draw.listAll();
@@ -142,8 +145,8 @@ public class DrawService {
 
         result.persist();
 
-        int ticketsCount = request.ticketsCount == null ? 0 : request.ticketsCount;
-        ticketGenerationService.generateTickets(draw, format, ticketsCount);
+        int ticketCount = request.ticketCount() == null ? 0 : request.ticketCount();
+        ticketGenerationService.generateTickets(draw, format, ticketCount);
 
         return toResponse(draw, result);
     }
@@ -166,7 +169,7 @@ public class DrawService {
             String format,
             Integer prisePool,
             Boolean instantaneous,
-            Integer ticketsCount
+            Integer ticketCount
     ) {
         CreateDrawRequest request = new CreateDrawRequest(
                 format,
@@ -174,7 +177,7 @@ public class DrawService {
                 true,
                 LocalDateTime.now(),
                 prisePool,
-                ticketsCount
+                ticketCount
         );
 
         return createDraw(request);
@@ -205,18 +208,18 @@ public class DrawService {
             throw new IllegalArgumentException("Prise pool must be positive");
         }
 
-        if (request.ticketsCount() != null) {
-            if (request.ticketsCount() < 0) {
+        if (request.ticketCount() != null) {
+            if (request.ticketCount() < 0) {
                 throw new IllegalArgumentException("Tickets count cannot be negative");
             }
 
-            if (request.ticketsCount() > MAX_AUTO_GENERATED_TICKETS) {
+            if (request.ticketCount() > MAX_AUTO_GENERATED_TICKETS) {
                 throw new IllegalArgumentException("Tickets count is too large");
             }
         }
     }
     private DrawResponse toResponse(Draw draw, DrawResult result) {
-        Long ticketsCount = Ticket.count("draw", draw);
+        Long ticketCount = Ticket.count("draw", draw);
 
         return new DrawResponse(
                 draw.id,
@@ -227,7 +230,7 @@ public class DrawService {
                 draw.getPrisePool(),
                 result == null ? null : result.getStatus(),
                 result == null ? "" : result.getDrawnNumbers(),
-                ticketsCount
+                ticketCount
         );
     }
 }

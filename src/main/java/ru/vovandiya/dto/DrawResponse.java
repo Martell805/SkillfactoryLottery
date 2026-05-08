@@ -1,6 +1,4 @@
-package ru.vovandiya.dto.lottery;
-
-import ru.vovandiya.dto.DrawStatus;
+package ru.vovandiya.dto;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +11,6 @@ public record DrawResponse(
         Integer prisePool,
         DrawStatus status,
         String drawnNumbers,
-        Long ticketsCount
+        Long ticketCount
 ) {
 }

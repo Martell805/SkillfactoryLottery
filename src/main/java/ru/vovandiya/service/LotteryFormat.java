@@ -1,4 +1,4 @@
-package ru.vovandiya.service.lottery;
+package ru.vovandiya.service;
 
 public record LotteryFormat(
         int minNumber,

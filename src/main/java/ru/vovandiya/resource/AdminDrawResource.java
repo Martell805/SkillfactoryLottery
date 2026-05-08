@@ -16,16 +16,13 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import ru.vovandiya.dto.DrawRequest;
 import ru.vovandiya.service.DrawService;
-import ru.vovandiya.dto.lottery.CreateDrawRequest;
+import ru.vovandiya.dto.CreateDrawRequest;
 import java.util.Map;
 import java.util.function.Supplier;
 
-@Path("/admin/draws")
 @RolesAllowed("admin")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-
-
 @Path("/admin/draws")
 public class AdminDrawResource {
 
@@ -96,6 +93,7 @@ public class AdminDrawResource {
     }
 
     @POST
+    @Path("/create")
     public Response createDraw(CreateDrawRequest request) {
         return Response.ok(drawService.createDraw(request)).build();
     }

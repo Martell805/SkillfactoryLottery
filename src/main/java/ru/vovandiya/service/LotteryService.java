@@ -1,15 +1,16 @@
-package ru.vovandiya.service.lottery;
+package ru.vovandiya.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import ru.vovandiya.dto.DrawStatus;
-import ru.vovandiya.dto.lottery.DrawNextResponse;
-import ru.vovandiya.dto.lottery.DrawRemainingResponse;
+import ru.vovandiya.dto.DrawNextResponse;
+import ru.vovandiya.dto.DrawRemainingResponse;
 import ru.vovandiya.model.Draw;
 import ru.vovandiya.model.DrawResult;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -27,11 +28,12 @@ public class LotteryService {
 
     @Transactional
     public DrawNextResponse drawNextBarrel(Long drawId) {
+        Draw draw = findDraw(drawId);
+
         if (Boolean.TRUE.equals(draw.getIsInstantaneous())) {
             throw new IllegalStateException("Instantaneous draw cannot be processed barrel by barrel");
         }
 
-        Draw draw = findDraw(drawId);
         DrawResult result = findDrawResult(draw);
 
         if (result.getStatus() == DrawStatus.COMPLETE) {

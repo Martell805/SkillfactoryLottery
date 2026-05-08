@@ -1,4 +1,4 @@
-package ru.vovandiya.service.lottery;
+package ru.vovandiya.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 

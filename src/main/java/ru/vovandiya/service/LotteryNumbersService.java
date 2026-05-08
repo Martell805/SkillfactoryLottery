@@ -1,8 +1,9 @@
-package ru.vovandiya.service.lottery;
+package ru.vovandiya.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ public class LotteryNumbersService {
     }
 
     public Set<Integer> parseNumbersToSet(String numbers) {
-        return parseNumbers(numbers).stream().collect(Collectors.toSet());
+        return new HashSet<>(parseNumbers(numbers));
     }
 
     public String toString(Collection<Integer> numbers) {

@@ -1,6 +1,4 @@
-package ru.vovandiya.dto.lottery;
-
-import ru.vovandiya.dto.DrawStatus;
+package ru.vovandiya.dto;
 
 import java.util.List;
 

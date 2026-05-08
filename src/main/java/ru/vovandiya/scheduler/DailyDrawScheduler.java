@@ -4,7 +4,7 @@ import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import ru.vovandiya.service.lottery.DrawService;
+import ru.vovandiya.service.DrawService;
 
 @ApplicationScoped
 public class DailyDrawScheduler {

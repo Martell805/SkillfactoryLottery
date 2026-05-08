@@ -1,4 +1,4 @@
-package ru.vovandiya.service.lottery;
+package ru.vovandiya.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -49,8 +49,8 @@ public class PrizeCalculationService {
 
         int prizePool = draw.getPrisePool() == null ? 0 : draw.getPrisePool();
         int totalWeight = winners.stream()
-                .mapToInt(TicketPrizeInfo::weight)
-                .sum();
+            .mapToInt(TicketPrizeInfo::weight)
+            .sum();
 
         int distributed = 0;
 
@@ -63,16 +63,12 @@ public class PrizeCalculationService {
         int remainder = prizePool - distributed;
 
         if (remainder > 0) {
-            TicketPrizeInfo bestWinner = winners.stream()
-                    .max(
-                            Comparator.comparingInt(TicketPrizeInfo::matches)
-                                    .thenComparingInt(TicketPrizeInfo::weight)
-                    )
-                    .orElse(null);
+            winners.stream()
+                .max(
+                    Comparator.comparingInt(TicketPrizeInfo::matches)
+                        .thenComparingInt(TicketPrizeInfo::weight)
+                ).ifPresent(bestWinner -> bestWinner.ticket().setPrize(bestWinner.ticket().getPrize() + remainder));
 
-            if (bestWinner != null) {
-                bestWinner.ticket().setPrize(bestWinner.ticket().getPrize() + remainder);
-            }
         }
     }
 
@@ -88,17 +84,17 @@ public class PrizeCalculationService {
         return count;
     }
 
-    private long getPrizeWeight(int matches) {
+    private int getPrizeWeight(int matches) {
         if (matches < MIN_MATCHES_FOR_PRIZE) {
-            return 0L;
+            return 0;
         }
-        return (long) matches * matches;
-        };
+        return matches * matches;
+    }
 
     private record TicketPrizeInfo(
-            Ticket ticket,
-            int matches,
-            int weight
+        Ticket ticket,
+        int matches,
+        int weight
     ) {
     }
 }
