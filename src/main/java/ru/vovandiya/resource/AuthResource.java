@@ -11,11 +11,15 @@ import jakarta.ws.rs.core.Response;
 import ru.vovandiya.dto.TokenResponse;
 import ru.vovandiya.dto.LoginRequest;
 import ru.vovandiya.service.AuthService;
+import ru.vovandiya.util.ResponseUtil;
 
 @Path("/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class AuthResource {
+
+    @Inject
+    ResponseUtil responseUtil;
 
     @Inject
     AuthService authService;
@@ -24,14 +28,15 @@ public class AuthResource {
     @Path("/register")
     @Transactional
     public Response register(LoginRequest request) {
-        authService.register(request.username(), request.password(), "user");
-        return Response.status(201).build();
+        return responseUtil.execute(() -> {
+            authService.register(request.username(), request.password(), "user");
+            return Response.status(201).build();
+        });
     }
 
     @POST
     @Path("/login")
     public Response login(LoginRequest request) {
-        var token = authService.login(request.username(), request.password());
-        return Response.ok(new TokenResponse(token)).build();
+        return responseUtil.execute(() -> Response.ok(new TokenResponse(authService.login(request.username(), request.password()))).build());
     }
 }

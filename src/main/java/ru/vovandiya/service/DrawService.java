@@ -3,10 +3,10 @@ package ru.vovandiya.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
-import ru.vovandiya.dto.DrawRequest;
+import ru.vovandiya.dto.*;
 import ru.vovandiya.model.Draw;
-
 import java.util.List;
+
 
 @ApplicationScoped
 public class DrawService {
