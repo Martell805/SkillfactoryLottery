@@ -16,7 +16,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import ru.vovandiya.dto.DrawRequest;
 import ru.vovandiya.service.DrawService;
-import ru.vovandiya.dto.CreateDrawRequest;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -90,25 +89,5 @@ public class AdminDrawResource {
                 .type(MediaType.APPLICATION_JSON)
                 .entity(Map.of("error", message))
                 .build();
-    }
-
-    @POST
-    @Path("/create")
-    public Response createDraw(CreateDrawRequest request) {
-        return Response.ok(drawService.createDraw(request)).build();
-    }
-
-    @POST
-    @Path("/daily")
-    public Response createDailyDraw() {
-        return Response.status(Response.Status.NOT_IMPLEMENTED)
-                .entity("Daily draw is created by scheduler")
-                .build();
-    }
-
-    @GET
-    @Path("/{drawId}")
-    public Response getDraw(@PathParam("drawId") Long drawId) {
-        return Response.ok(drawService.getDraw(drawId)).build();
     }
 }

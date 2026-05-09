@@ -1,6 +1,7 @@
 package ru.vovandiya.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import ru.vovandiya.dto.LotteryFormat;
 
 @ApplicationScoped
 public class LotteryFormatService {

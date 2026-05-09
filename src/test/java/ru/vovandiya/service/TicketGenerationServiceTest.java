@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.vovandiya.dto.LotteryFormat;
 import ru.vovandiya.model.Draw;
 import ru.vovandiya.model.DrawResult;
 import ru.vovandiya.model.Ticket;

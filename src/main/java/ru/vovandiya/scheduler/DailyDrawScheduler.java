@@ -4,13 +4,13 @@ import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import ru.vovandiya.service.DrawService;
+import ru.vovandiya.service.LotteryDrawService;
 
 @ApplicationScoped
 public class DailyDrawScheduler {
 
     @Inject
-    DrawService drawService;
+    LotteryDrawService drawService;
 
     @ConfigProperty(name = "lottery.daily.format")
     String dailyFormat;

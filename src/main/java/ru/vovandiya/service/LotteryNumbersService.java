@@ -1,6 +1,7 @@
 package ru.vovandiya.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import ru.vovandiya.dto.LotteryFormat;
 
 import java.util.Collection;
 import java.util.HashSet;

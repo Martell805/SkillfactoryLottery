@@ -3,6 +3,7 @@ package ru.vovandiya.service;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import ru.vovandiya.dto.LotteryFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 

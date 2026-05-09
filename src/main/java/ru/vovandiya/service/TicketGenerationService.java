@@ -2,6 +2,7 @@ package ru.vovandiya.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import ru.vovandiya.dto.LotteryFormat;
 import ru.vovandiya.model.Draw;
 import ru.vovandiya.model.Ticket;
 

@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import ru.vovandiya.dto.DrawStatus;
 import ru.vovandiya.dto.DrawNextResponse;
 import ru.vovandiya.dto.DrawRemainingResponse;
+import ru.vovandiya.dto.LotteryFormat;
 import ru.vovandiya.model.Draw;
 import ru.vovandiya.model.DrawResult;
 
