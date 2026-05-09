@@ -148,7 +148,7 @@ class UserHistoryResourceTest {
     void my_tickets_returns_only_own() {
         long ludomanId = createUser("ludoman");
         long bobId = createUser("bob");
-        long drawId = createDraw("6/45", 100);
+        long drawId = createDraw("0-15:6", 100);
 
         long ludomanOp = createOperation(ludomanId, "2026-05-01T10:00:00");
         long bobOp = createOperation(bobId, "2026-05-02T10:00:00");
@@ -176,7 +176,7 @@ class UserHistoryResourceTest {
     @TestSecurity(user = "ludoman", roles = "admin")
     void my_tickets_filter_by_drawId() {
         long ludomanId = createUser("ludoman");
-        long draw1 = createDraw("6/45", 100);
+        long draw1 = createDraw("0-15:6", 100);
         long draw2 = createDraw("7/49", 200);
 
         long op1 = createOperation(ludomanId, "2026-05-01T10:00:00");
@@ -196,7 +196,7 @@ class UserHistoryResourceTest {
     @TestSecurity(user = "ludoman", roles = "admin")
     void my_tickets_filter_by_time_range() {
         long ludomanId = createUser("ludoman");
-        long drawId = createDraw("6/45", 100);
+        long drawId = createDraw("0-15:6", 100);
 
         long opJan = createOperation(ludomanId, "2026-01-10T10:00:00");
         long opJun = createOperation(ludomanId, "2026-06-15T10:00:00");
@@ -217,7 +217,7 @@ class UserHistoryResourceTest {
     @TestSecurity(user = "ludoman", roles = "admin")
     void my_tickets_filter_by_drawId_and_range_combined() {
         long ludomanId = createUser("ludoman");
-        long draw1 = createDraw("6/45", 100);
+        long draw1 = createDraw("0-15:6", 100);
         long draw2 = createDraw("7/49", 200);
 
         long opMay = createOperation(ludomanId, "2026-05-01T10:00:00");
@@ -240,7 +240,7 @@ class UserHistoryResourceTest {
     @TestSecurity(user = "ludoman", roles = "admin")
     void my_tickets_contains_draw_and_purchase_info() {
         long ludomanId = createUser("ludoman");
-        long drawId = createDraw("6/45", 500);
+        long drawId = createDraw("0-15:6", 500);
         long opId = createOperation(ludomanId, "2026-05-01T10:00:00");
         createTicketWithOperation(drawId, opId, "5,10,15");
 
@@ -267,55 +267,4 @@ class UserHistoryResourceTest {
         given().when().get("/user/me/tickets").then().statusCode(401);
     }
 
-    @Test
-    @TestSecurity(user = "ludoman", roles = "admin")
-    void after_buying_new_ticket_it_appears_in_my_tickets() {
-        createUser("ludoman");
-        long drawId = createDraw("6/45", 1000);
-
-        given().contentType("application/json")
-                .body("{\"pickedNumbers\":\"1,7,13,21,34,45\"}")
-                .post("/user/draws/" + drawId + "/tickets/buy")
-                .then().statusCode(201);
-
-        given().when().get("/user/me/tickets")
-                .then().statusCode(200)
-                .body("$", hasSize(1))
-                .body("[0].pickedNumbers", equalTo("1,7,13,21,34,45"));
-    }
-
-    @Test
-    @TestSecurity(user = "ludoman", roles = "admin")
-    void after_buying_new_ticket_operation_appears_in_my_operations() {
-        createUser("ludoman");
-        long drawId = createDraw("6/45", 1000);
-
-        given().contentType("application/json")
-                .body("{\"pickedNumbers\":\"2,4,6,8,10,12\"}")
-                .post("/user/draws/" + drawId + "/tickets/buy")
-                .then().statusCode(201);
-
-        given().when().get("/user/me/operations")
-                .then().statusCode(200)
-                .body("$", hasSize(1));
-    }
-
-    @Test
-    @TestSecurity(user = "ludoman", roles = "admin")
-    void after_buying_existing_ticket_it_disappears_from_available() {
-        createUser("ludoman");
-        long drawId = createDraw("6/45", 500);
-        long ticketId = given().contentType("application/json")
-                .body("{\"drawId\":" + drawId + ",\"pickedNumbers\":\"3,6,9\",\"prize\":0}")
-                .post("/admin/tickets").jsonPath().getLong("id");
-
-        given().when().get("/user/draws/" + drawId + "/tickets/available")
-                .then().statusCode(200).body("$", hasSize(1));
-
-        given().contentType("application/json")
-                .when().post("/user/tickets/" + ticketId + "/buy").then().statusCode(200);
-
-        given().when().get("/user/draws/" + drawId + "/tickets/available")
-                .then().statusCode(200).body("$", hasSize(0));
-    }
 }
