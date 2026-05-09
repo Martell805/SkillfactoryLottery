@@ -4,16 +4,20 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
-import ru.vovandiya.model.Draw;
-import ru.vovandiya.model.Operation;
-import ru.vovandiya.model.Ticket;
-import ru.vovandiya.model.User;
+import ru.vovandiya.dto.DrawStatus;
+import ru.vovandiya.model.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 @ApplicationScoped
 public class UserTicketService {
+
+    @Inject
+    LotteryFormatService lotteryFormatService;
+
+    @Inject
+    LotteryNumbersService lotteryNumbersService;
 
     @Inject
     DrawService drawService;
@@ -25,6 +29,7 @@ public class UserTicketService {
     @Transactional
     public Ticket buyExistingTicket(Long ticketId, User currentUser) {
         Ticket ticket = findTicketById(ticketId);
+        validateTicketDrawStatus(ticket.getDraw());
         if (ticket.getOperation() != null) {
             throw new WebApplicationException("Ticket is already purchased", 409);
         }
@@ -47,6 +52,11 @@ public class UserTicketService {
             throw new WebApplicationException("pickedNumbers is required", 400);
         }
         Draw draw = drawService.findById(requirePositiveId(drawId, "drawId"));
+
+
+        var drawFormat = lotteryFormatService.parse(draw.getFormat());
+        lotteryNumbersService.validateNumbers(pickedNumbers, drawFormat);
+        validateTicketDrawStatus(draw);
 
         Operation operation = Operation.builder()
                 .user(currentUser)
@@ -133,5 +143,13 @@ public class UserTicketService {
         m.put("pickedNumbers", t.getPickedNumbers());
         m.put("prize", t.getPrize());
         return m;
+    }
+
+    private void validateTicketDrawStatus(Draw draw) {
+        DrawResult drawResult = DrawResult.find("draw", draw).firstResult();
+        if (drawResult.getStatus() != DrawStatus.NEW) {
+            throw new IllegalArgumentException("Draw is already over or currently running: " + draw.id);
+        }
+
     }
 }

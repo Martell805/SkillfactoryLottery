@@ -15,6 +15,10 @@ public class ResponseUtil {
             return action.get();
         } catch (WebApplicationException exception) {
             return toErrorResponse(exception);
+
+
+        } catch (IllegalArgumentException exception){
+            return Response.status(Response.Status.BAD_REQUEST).build();
         } catch (RuntimeException exception) {
             return Response.serverError()
                     .type(MediaType.APPLICATION_JSON)
