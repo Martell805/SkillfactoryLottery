@@ -15,16 +15,18 @@ import ru.vovandiya.model.User;
 import ru.vovandiya.service.UserDrawService;
 import ru.vovandiya.service.UserOperationService;
 import ru.vovandiya.service.UserTicketService;
+import ru.vovandiya.util.ResponseUtil;
 
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.function.Supplier;
 
 @Path("/user")
 @RolesAllowed({"user", "admin"})
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class UserResource {
+
+    @Inject
+    ResponseUtil responseUtil;
 
     @Inject
     UserDrawService userDrawService;
@@ -46,7 +48,7 @@ public class UserResource {
             @QueryParam("format") String format,
             @QueryParam("from") LocalDateTime from,
             @QueryParam("to") LocalDateTime to) {
-        return execute(() -> Response.ok(userDrawService.listDraws(status, format, from, to)).build());
+        return responseUtil.execute(() -> Response.ok(userDrawService.listDraws(status, format, from, to)).build());
     }
 
     /**
@@ -56,7 +58,7 @@ public class UserResource {
     @GET
     @Path("/draws/{drawId}/result")
     public Response getDrawResult(@PathParam("drawId") Long drawId) {
-        return execute(() -> Response.ok(userDrawService.getDrawResult(drawId)).build());
+        return responseUtil.execute(() -> Response.ok(userDrawService.getDrawResult(drawId)).build());
     }
 
     /**
@@ -66,7 +68,7 @@ public class UserResource {
     @GET
     @Path("/draws/{drawId}/last-barrel")
     public Response getLastBarrel(@PathParam("drawId") Long drawId) {
-        return execute(() -> Response.ok(userDrawService.getLastBarrel(drawId)).build());
+        return responseUtil.execute(() -> Response.ok(userDrawService.getLastBarrel(drawId)).build());
     }
 
     /**
@@ -76,7 +78,7 @@ public class UserResource {
     @GET
     @Path("/draws/{drawId}/tickets/available")
     public Response getAvailableTickets(@PathParam("drawId") Long drawId) {
-        return execute(() -> Response.ok(userDrawService.getAvailableTickets(drawId)).build());
+        return responseUtil.execute(() -> Response.ok(userDrawService.getAvailableTickets(drawId)).build());
     }
 
     /**
@@ -89,7 +91,7 @@ public class UserResource {
     public Response buyExistingTicket(
             @PathParam("ticketId") Long ticketId,
             @Context SecurityContext securityContext) {
-        return execute(() -> {
+        return responseUtil.execute(() -> {
             User currentUser = resolveCurrentUser(securityContext);
             Ticket ticket = userTicketService.buyExistingTicket(ticketId, currentUser);
             return Response.ok(ticket).build();
@@ -108,7 +110,7 @@ public class UserResource {
             @PathParam("drawId") Long drawId,
             BuyNewTicketRequest request,
             @Context SecurityContext securityContext) {
-        return execute(() -> {
+        return responseUtil.execute(() -> {
             User currentUser = resolveCurrentUser(securityContext);
             String pickedNumbers = request != null ? request.pickedNumbers() : null;
             Ticket ticket = userTicketService.buyNewTicket(drawId, pickedNumbers, currentUser);
@@ -127,7 +129,7 @@ public class UserResource {
             @QueryParam("from") LocalDateTime from,
             @QueryParam("to") LocalDateTime to,
             @Context SecurityContext securityContext) {
-        return execute(() -> {
+        return responseUtil.execute(() -> {
             User currentUser = resolveCurrentUser(securityContext);
             return Response.ok(userTicketService.getMyTickets(currentUser, drawId, from, to)).build();
         });
@@ -143,7 +145,7 @@ public class UserResource {
             @QueryParam("from") LocalDateTime from,
             @QueryParam("to") LocalDateTime to,
             @Context SecurityContext securityContext) {
-        return execute(() -> {
+        return responseUtil.execute(() -> {
             User currentUser = resolveCurrentUser(securityContext);
             return Response.ok(userOperationService.getMyOperations(currentUser, from, to)).build();
         });
@@ -156,35 +158,5 @@ public class UserResource {
         String username = securityContext.getUserPrincipal().getName();
         return User.findByUsername(username)
                 .orElseThrow(() -> new WebApplicationException("User not found", 404));
-    }
-
-    private Response execute(Supplier<Response> action) {
-        try {
-            return action.get();
-        } catch (WebApplicationException exception) {
-            return toErrorResponse(exception);
-        } catch (RuntimeException exception) {
-            return Response.serverError()
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(Map.of("error", "Unexpected server error: " + exception.getMessage()))
-                    .build();
-        }
-    }
-
-    private Response toErrorResponse(WebApplicationException exception) {
-        Response originalResponse = exception.getResponse();
-        int status = originalResponse != null
-                ? originalResponse.getStatus()
-                : Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
-        Object entity = originalResponse != null ? originalResponse.getEntity() : null;
-        String message = entity instanceof String s && !s.isBlank()
-                ? s : exception.getMessage();
-        if (message == null || message.isBlank()) {
-            message = "Request failed";
-        }
-        return Response.status(status)
-                .type(MediaType.APPLICATION_JSON)
-                .entity(Map.of("error", message))
-                .build();
     }
 }
